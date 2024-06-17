@@ -1,0 +1,34 @@
+#include <Servo.h>
+
+// Maak een Servo object aan
+Servo myServo;
+
+// Definieer de pin waar de servo is aangesloten
+const int servoPin = 9;
+
+void setup() {
+  // Koppel de servo motor aan de pin
+  myServo.attach(servoPin);
+
+  // Zet de servo motor naar de startpositie (0 graden)
+  myServo.write(0);
+  delay(1000); // Wacht 1 seconde
+}
+
+void loop() {
+  // Beweeg de servo naar 0 graden
+  myServo.write(0);
+  delay(1000); // Wacht 1 seconde
+
+  // Beweeg de servo naar 90 graden
+  myServo.write(90);
+  delay(1000); // Wacht 1 seconde
+
+  // Beweeg de servo naar 180 graden
+  myServo.write(180);
+  delay(1000); // Wacht 1 seconde
+
+  // Beweeg de servo terug naar 90 graden
+  myServo.write(90);
+  delay(1000); // Wacht 1 seconde
+}
