@@ -1,0 +1,70 @@
+volatile int pulseCount = 0; // Variabele voor het bijhouden van het aantal pulsen
+const int sensorPin = 2; // Pin waar de sensor is aangesloten
+unsigned long lastFlowTime = 0; // Variabele om de tijd van de laatste flow te bewaren
+float totalLiters = 0; // Variabele voor het bijhouden van de totale hoeveelheid gemeten water
+const unsigned long noFlowTimeout = 10000; // Wachttijd van 10 seconden (in milliseconden)
+
+void setup() {
+  // Start de seriële communicatie op 9600 baud
+  Serial.begin(9600);
+
+  // Stel de pinmode van de sensorpin in als INPUT
+  pinMode(sensorPin, INPUT_PULLUP);
+
+  // Koppel een interrupt aan de sensorPin om pulsen te tellen
+  attachInterrupt(digitalPinToInterrupt(sensorPin), countPulse, FALLING);
+
+  // Bericht om te laten weten dat het systeem klaar is
+  Serial.println("Water flow sensor test gestart.");
+}
+
+void loop() {
+  // Maak de pulsenteller tijdelijk en reset de hoofdvariabele
+  noInterrupts();
+  int pulseCountCopy = pulseCount;
+  pulseCount = 0;
+  interrupts();
+
+  if (pulseCountCopy > 0) {
+    // Bereken de flow rate in liters per minuut (aanname: 450 pulsen per liter)
+    float flowRate = (pulseCountCopy / 450.0) * 60.0;
+    float liters = flowRate / 60.0; // Aantal liters per seconde
+
+    // Voeg de gemeten liters toe aan de totale hoeveelheid
+    totalLiters += liters;
+
+    // Update de tijd van de laatste flow
+    lastFlowTime = millis();
+
+    // Print het aantal pulsen en de flow rate naar de seriële monitor
+    Serial.print("Pulsen: ");
+    Serial.print(pulseCountCopy);
+    Serial.print("\tFlow rate: ");
+    Serial.print(flowRate);
+    Serial.println(" L/min");
+
+    // Print de totale hoeveelheid gemeten water
+    Serial.print("Totale hoeveelheid gemeten water: ");
+    Serial.print(totalLiters);
+    Serial.println(" L");
+  }
+
+  // Controleer of er sinds de laatste flow meer dan 10 seconden zijn verstreken
+  if (millis() - lastFlowTime > noFlowTimeout && totalLiters > 0) {
+    // Print de totale hoeveelheid gemeten water naar de seriële monitor
+    Serial.print("Geen flow gedetecteerd. Totale hoeveelheid gemeten water: ");
+    Serial.print(totalLiters);
+    Serial.println(" L");
+
+    // Reset de totale hoeveelheid gemeten water
+    totalLiters = 0;
+  }
+
+  // Wacht 1 seconde voor de volgende meting
+  delay(1000);
+}
+
+// Functie om pulsen te tellen
+void countPulse() {
+  pulseCount++;
+}
